@@ -1,0 +1,58 @@
+,model,model_type,waic,dwaic
+1,brood*climate2 + urbanization + agrictulture,with_means/with_traits,251758.6,0
+2,brood*climate2*urbanization,with_means/with_traits,251942.2,183.6
+3,brood*climate1 + urbanization + agrictulture,with_means/with_traits,252076.2,317.6
+4,brood*climate2 + urbanization,with_means/with_traits,252199.9,441.3
+5,brood*climate1*urbanization,with_means/with_traits,252382.5,623.9
+6,brood*climate1 + urbanization,with_means/with_traits,252522.7,764.2
+7,brood*climate2*agriculture,with_means/with_traits,253186.5,1427.9
+8,brood*climate2 + agriculture,with_means/with_traits,253439.3,1680.7
+9,brood*climate1*agriculture,with_means/with_traits,253587.2,1828.6
+10,brood*climate2 + agriculture,with_means/with_traits,253760.3,2001.7
+11,brood*climate2 + urbanization + agrictulture,no_means/with_traits,254299.2,2540.6
+12,brood*climate1 + urbanization + agrictulture,no_means/with_traits,254303.2,2544.6
+13,brood*climate2*urbanization,no_means/with_traits,254633.1,2874.6
+14,brood*climate1*urbanization,no_means/with_traits,254633.3,2874.7
+15,brood*climate1 + urbanization,no_means/with_traits,254718.5,2960
+16,brood*climate2 + urbanization,no_means/with_traits,254719,2960.4
+17,climate2 + urbanization + agrictulture,with_means/no_traits,255416.7,3658.2
+18,climate1 + urbanization + agrictulture,with_means/no_traits,255542.9,3784.3
+19,climate2*urbanization,with_means/no_traits,255609.2,3850.6
+20,urbanization*agriculture,with_means/no_traits,255783.3,4024.7
+21,climate1 + urbanization + agrictulture,no_means/no_traits,255840.7,4082.1
+22,climate1*urbanization,with_means/no_traits,255842.4,4083.8
+23,climate2 + urbanization + agrictulture,no_means/no_traits,255843.4,4084.8
+24,climate2 + urbanization,with_means/no_traits,255847.5,4089
+25,climate1 + urbanization,with_means/no_traits,255983.6,4225.1
+26,brood*climate2 + agriculture,no_means/with_traits,256007.7,4249.1
+27,brood*climate2 + agriculture,no_means/with_traits,256010.8,4252.2
+28,brood*climate2*agriculture,no_means/with_traits,256011.8,4253.3
+29,brood*climate1*agriculture,no_means/with_traits,256018.1,4259.6
+30,urbanization + agriculture,with_means/no_traits,256049.2,4290.6
+31,urbanization*agriculture,no_means/no_traits,256064.2,4305.7
+32,urbanization + agriculture,no_means/no_traits,256149.9,4391.3
+33,climate1*urbanization,no_means/no_traits,256169.4,4410.8
+34,climate2*urbanization,no_means/no_traits,256173.3,4414.8
+35,climate1 + urbanization,no_means/no_traits,256254,4495.4
+36,climate2 + urbanization,no_means/no_traits,256257.2,4498.6
+37,brood*climate2,with_means/with_traits,256282.6,4524
+38,urbanization,with_means/no_traits,256525.9,4767.3
+39,urbanization,no_means/no_traits,256583,4824.4
+40,brood*climate1,with_means/with_traits,256618.2,4859.7
+41,agriculture,with_means/no_traits,256741.5,4982.9
+42,climate2*agriculture,with_means/no_traits,256810.7,5052.2
+43,agriculture,no_means/no_traits,256870.5,5111.9
+44,climate1*agriculture,with_means/no_traits,257028.8,5270.2
+45,climate2 + agriculture,with_means/no_traits,257081,5322.5
+46,climate2 + agriculture,with_means/no_traits,257199.3,5440.7
+47,climate2 + agriculture,no_means/no_traits,257569.5,5810.9
+48,climate2 + agriculture,no_means/no_traits,257569.8,5811.2
+49,climate2*agriculture,no_means/no_traits,257576.4,5817.9
+50,climate1*agriculture,no_means/no_traits,257576.9,5818.3
+51,brood*climate1,no_means/with_traits,258827.3,7068.7
+52,brood*climate2,no_means/with_traits,258832.6,7074
+53,climate2,with_means/no_traits,259924.7,8166.1
+54,climate1,with_means/no_traits,260071.1,8312.5
+55,climate1,no_means/no_traits,260404.1,8645.5
+56,climate2,no_means/no_traits,260408.6,8650.1
+57,intercept,intercept,261593.5,9834.9
