@@ -357,7 +357,7 @@ for(i in 1:length(sp.list3$species)){
   year_strat_combs <- d3 %>% tidyr::expand(year_idx1, strat_idx1)
   pred_rows <- year_strat_combs %>% 
     left_join(d3) %>% 
-    mutate(log_hrs=log(mean(exp(d2$log_hrs))),
+    mutate(log_hrs=log(mean(exp(d2$log_hrs))), #get predictions at mean sampling effort
            site_idx1=NA, count=NA) %>% 
     distinct(strat_idx1, year_idx1, .keep_all=T)
   
