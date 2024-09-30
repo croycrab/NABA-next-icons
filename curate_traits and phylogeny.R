@@ -3,14 +3,22 @@
 #in hindsight, this is super messy, but the  main jist of it is that species level traits were cleaned up and appended to the dataframe containing species-level abundance trends (vs strata-level species abundance trends). I did this originally to plot the species-level trends, so this dataframe is used for that. There was no need to append traits for thsi however, but that's the way the cookie crumbles. I use the this global trend + trait dataframe later to append species level traits to strata-level trends, and then I append the strata-level voltinism data. I know, messy, but I don't have time to clean it all up. Hopefully it is clear however.
 
 
+# set up ------------------------------------------------------------------
+library(tidyverse); library(phytools); library(bbsBayes)
+library(MCMCglmm); library(sf)
+#simple scaling function
+scale_this <- function(x){
+  (x - mean(x, na.rm=TRUE)) / sd(x, na.rm=TRUE)
+}
 # global trends with traits -----------------------------------------------
 #import trends 
 df.but.global <- read.csv("data/trends/trends_1996-2018.csv") %>%
   rename('Species' = "species") %>%
-  mutate(trend_prec = (1/((ci_range/3.92)^2)))dddd
+  mutate(trend_prec = (1/((ci_range/3.92)^2))) 
 
 #import LepTraits1.0 data and clean up
-df.traits <-read.csv("data/traits/consensus.csv",header = T,na.strings=c(""," ","NA")) 
+df.traits <-read.csv("data/traits/consensus.csv",header = T,na.strings=c(""," ","NA")) %>% 
+  rownames_to_column("id")
 df.traits$Species[which(df.traits$Species == "Apodemia palmerii")] = "Apodemia palmeri"
 df.traits$Species[which(df.traits$Species == "Glutophrissa drusilla")] = "Appias drusilla"
 df.traits$Species[which(df.traits$Species == "Cecropterus casica")] = "Achalarus casica"
@@ -293,6 +301,42 @@ phylo_prec_mat.sub = inverseA(tree.sub1,nodes = "TIPS",scale = TRUE)$Ainv
 sp.order.sub = data.frame(Species = phylo_prec_mat.sub@Dimnames[[1]],sp_idx1 = 1:length(phylo_prec_mat.sub@Dimnames[[1]]))
 plot(tree.sub1)
 
+
+# create map for inla model (traits complete) -----------------------------------------------
+sp.vect <- str_split(list.files("data/sampled from model_strata"),"_",simplify = T)[,1]
+map1 <- load_map(stratify_by="bbs_usgs") %>% rename_all(tolower) %>% 
+  dplyr::select(2, 3) %>% rename(strat_name=st_12, strat_A=area_1)
+sites.list <- list()
+for(i in 1:length(sp.vect)){
+  sites.list[[i]] <- read.csv(paste0("data/site strat key/",sp.vect[i],"_site_strat_key.csv")) %>% 
+    filter(n_sites >= 3 & strat_z > 0 & !(is.na(site))) %>% 
+    mutate(lon = str_split(site,"_",simplify = T)[,2],lat = str_split(site,"_",simplify = T)[,3]) %>% 
+    dplyr::select(site,lon,lat)
+}
+sites1 <- do.call("rbind",sites.list) %>% 
+  as.data.frame() %>% 
+  distinct(site,lat,lon)%>%
+  st_as_sf(coords=c("lon", "lat"), crs=4326) %>%
+  st_transform(crs=st_crs(map1))
+
+# pair each site with its respective bbs stratum
+within1 <- sapply(st_within(sites1, map1), function(z) if (length(z)==0) 
+  NA_integer_ else z[1])
+near1 <- st_nearest_feature(sites1, map1) 
+poly_per_site <- ifelse(is.na(within1), near1, within1)
+site_strat_key <- sites1 %>% 
+  mutate(strat_name=unique(map1$strat_name)[poly_per_site]) %>% 
+  st_drop_geometry() %>% 
+  right_join(map1 %>% st_drop_geometry()) %>% 
+  dplyr::select(site, strat_name, strat_A)
+
+area1 <- st_convex_hull(st_combine(sites1)) %>% st_as_sf()
+strat_in_area <- sapply(st_intersects(map1, area1), 
+                        function(z) if (length(z)==0) 
+                          NA_integer_ else z[1])
+map2 <- map1[which(strat_in_area==1), ] %>% 
+  mutate(strat_idx1=as.integer(factor(strat_name))) %>% 
+  dplyr::select(strat_name, strat_idx1, strat_A)
 # strata-level data prep --------------------------------------------------
 df.strata <- read.csv("data/trends/trends by strata_1996-2018.csv") %>% 
   mutate(trend_prec = (1/((ci_range/3.92)^2))) %>% 
@@ -300,8 +344,7 @@ df.strata <- read.csv("data/trends/trends by strata_1996-2018.csv") %>%
   left_join(df.traits4[,c("Species","strat_name","brood")],by=c("species" = "Species","strat_name"))  %>% 
   dplyr::select(mean_trend,disturbance,edge,canopy,moisture,diet_breadth,brood,hairs,clutch,diapause,adult_aposematism,larvae_aposematism,range_size,flight_duration,size,species,strat_name,trend_prec) %>%
   left_join(sp.order.sub,by = c("species" = "Species")) %>% 
-  left_join(map2 %>% st_drop_geometry() %>% dplyr::select(strat_name,strat_idx1),by = "strat_name") %>%
-  na.omit()
+  left_join(map2 %>% st_drop_geometry() %>% dplyr::select(strat_name,strat_idx1),by = "strat_name")
 
 # save output for modeling ------------------------------------------------
 save(df.global,df.strata,phylo_prec_mat.sub,phylo_prec_mat.full,tree.full, file = "traits and phylo.RData")
