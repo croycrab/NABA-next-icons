@@ -1,6 +1,6 @@
 #climate and land use change model selection -- generate list of models to compare
 
-library(package)
+# library(package)
 
 # create list of relevant models ------------------------
 mod.list <- list()

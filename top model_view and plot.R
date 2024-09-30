@@ -29,13 +29,15 @@ prec_prior <- list(prec = list(prior = "pc.prec", param = c(1, 0.01)))
 #load inla graph and abundance data (with covariates)
 #load all models, graph, and data
 load("model selection list.RData")
-g1 <- inla.read.graph(filename = "neighborhood graphs/map_allspecies.adj")
+load("traits and phylo.RData")
+sp.order = data.frame(Species = phylo_prec_mat.full@Dimnames[[1]],sp_idx1 = 1:length(phylo_prec_mat.full@Dimnames[[1]]))
+g1 <- inla.read.graph(filename = "data/neighborhood graphs/map_allspecies.adj")
 d1 <- read.csv("data/all species counts_by strata and year_with covariates.csv") %>% 
   left_join(sp.order,by = c("species" = "Species"))
 d1$strat_idx2 = d1$strat_idx3 = d1$strat_idx4 = d1$strat_idx5 = d1$strat_idx1
 d1$sp_idx2 = d1$sp_idx3 = d1$sp_idx4 = d1$sp_idx5 = d1$sp_idx1 
 # d1$family_idx1 = as.integer(factor(d1$Family))
-d1<-d1 %>% left_join(df.strata2[,c("species","strat_name","brood")],by = c("species","strat_name"))
+d1<-d1 %>% left_join(df.strata[,c("species","strat_name","brood")],by = c("species","strat_name"))
 
 top.model <- inla(mod.list[[53]], data=d1,scale = log_prec_y,
                   family = "gaussian",
@@ -45,82 +47,17 @@ top.model <- inla(mod.list[[53]], data=d1,scale = log_prec_y,
                   verbose=T, inla.mode="experimental",
                   control.inla = list(strategy = 'adaptive', int.strategy = 'eb'),
                   control.family=list(hyper=list(prec=list(initial=log(1), fixed=TRUE))))
-
-
-# species level covariate effects -----------------------------------------
-length(unique(d1$strat_idx1))
-mod.list[[53]]
-#most/least susceptible to warming
-top.model$summary.random$sp_idx2[which(top.model$summary.random$sp_idx2$mean == min(top.model$summary.random$sp_idx2$mean)),"ID"]
-d1$species[which(d1$sp_idx2 == "810")] %>% unique() #Thymelicus lineola
-
-top.model$summary.random$sp_idx2[which(top.model$summary.random$sp_idx2$mean == max(top.model$summary.random$sp_idx2$mean)),"ID"]
-d1$species[which(d1$sp_idx2 == "275")] %>% unique() #Hemiargus ceraunus
-
-#most/least susceptible to drying
-top.model$summary.random$sp_idx3[which(top.model$summary.random$sp_idx3$mean == min(top.model$summary.random$sp_idx3$mean)),"ID"]
-d1$species[which(d1$sp_idx3 == "514")] %>% unique() #Speyeria cybele
-
-top.model$summary.random$sp_idx3[which(top.model$summary.random$sp_idx3$mean == max(top.model$summary.random$sp_idx3$mean)),"ID"]
-d1$species[which(d1$sp_idx3 == "115")] %>% unique() #Ascia monuste
-
-#most/least susceptible to urbanization
-top.model$summary.random$sp_idx4[which(top.model$summary.random$sp_idx4$mean == min(top.model$summary.random$sp_idx4$mean)),"ID"]
-d1$species[which(d1$sp_idx4 == "482")] %>% unique() #Chlosyne harrisii
-
-top.model$summary.random$sp_idx4[which(top.model$summary.random$sp_idx4$mean == max(top.model$summary.random$sp_idx4$mean)),"ID"]
-d1$species[which(d1$sp_idx4 == "798")] %>% unique() #Cymaenes tripunctus
-
-#most/least susceptible to ag expansion
-top.model$summary.random$sp_idx5[which(top.model$summary.random$sp_idx5$mean == min(top.model$summary.random$sp_idx5$mean)),"ID"]
-d1$species[which(d1$sp_idx5 == "300")] %>% unique() #Calephelis arizonensis
-
-top.model$summary.random$sp_idx5[which(top.model$summary.random$sp_idx5$mean == max(top.model$summary.random$sp_idx5$mean)),"ID"]
-d1$species[which(d1$sp_idx5 == "781")] %>% unique() #Amblyscirtes texanae
-
-#pieris rapae covariate effects
-sp.order$sp_idx1[which(sp.order$Species == "Pieris rapae")]
-top.model$summary.fixed
-top.model$summary.random$sp_idx2[which(top.model$summary.random$sp_idx2$ID == "107"),] #warming
-top.model$summary.random$sp_idx3[which(top.model$summary.random$sp_idx3$ID == "107"),] #drying
-top.model$summary.random$sp_idx4[which(top.model$summary.random$sp_idx4$ID == "107"),] #urbanization
-top.model$summary.random$sp_idx5[which(top.model$summary.random$sp_idx5$ID == "107"),] #agricultural expansion
-hist(top.model$summary.random$sp_idx2$mean)
-
-
-p.rapae.tmp <- gghistogram(top.model$summary.random$species_idx2$mean+top.model$summary.fixed$mean[which(rownames(top.model$summary.fixed) == "tmp")],fill = "gray")+
-  annotate("rect",xmin = (top.model$summary.random$species_idx2$`0.025quant`[which(top.model$summary.random$species_idx2$ID == "225")]+top.model$summary.fixed$mean[which(rownames(top.model$summary.fixed) == "tmp")]),xmax = (top.model$summary.random$species_idx2$`0.975quant`[which(top.model$summary.random$species_idx2$ID == "225")]+top.model$summary.fixed$mean[which(rownames(top.model$summary.fixed) == "tmp")]),ymin = 0,ymax = Inf,fill="blue", alpha = .5)+
-  # geom_vline(xintercept = 0,color="black",size = 1.25,lty = "solid")+
-  labs(y= "Frequency", x="Temperature Effect (slope)")
-
-p.rapae.pre <- gghistogram(top.model$summary.random$species_idx3$mean+top.model$summary.fixed$mean[which(rownames(top.model$summary.fixed) == "pre")],fill = "gray")+
-  annotate("rect",xmin = (top.model$summary.random$species_idx3$`0.025quant`[which(top.model$summary.random$species_idx3$ID == "225")]+top.model$summary.fixed$mean[which(rownames(top.model$summary.fixed) == "pre")]),xmax = (top.model$summary.random$species_idx3$`0.975quant`[which(top.model$summary.random$species_idx3$ID == "225")]+top.model$summary.fixed$mean[which(rownames(top.model$summary.fixed) == "pre")]),ymin = 0,ymax = Inf,fill="blue", alpha = .5)+
-  # geom_vline(xintercept = 0,color="black",size = 1.25,lty = "solid")+
-  labs(y= "Frequency", x="Precipitation Effect (slope)")
-
-p.rapae.urb <- gghistogram(top.model$summary.random$species_idx4$mean+top.model$summary.fixed$mean[which(rownames(top.model$summary.fixed) == "urban")],fill = "gray")+
-  annotate("rect",xmin = (top.model$summary.random$species_idx4$`0.025quant`[which(top.model$summary.random$species_idx4$ID == "225")]+top.model$summary.fixed$mean[which(rownames(top.model$summary.fixed) == "urban")]),xmax = (top.model$summary.random$species_idx4$`0.975quant`[which(top.model$summary.random$species_idx4$ID == "225")]+top.model$summary.fixed$mean[which(rownames(top.model$summary.fixed) == "urban")]),ymin = 0,ymax = Inf,fill="blue", alpha = .5)+
-  # geom_vline(xintercept = 0,color="black",size = 1.25,lty = "solid")+
-  labs(y= "Frequency", x="Urbanization Effect (slope)")
-
-p.rapae.ag <- gghistogram(top.model$summary.random$species_idx5$mean+top.model$summary.fixed$mean[which(rownames(top.model$summary.fixed) == "agriculture")],fill = "gray")+
-  annotate("rect",xmin = (top.model$summary.random$species_idx5$`0.025quant`[which(top.model$summary.random$species_idx5$ID == "225")]+top.model$summary.fixed$mean[which(rownames(top.model$summary.fixed) == "agriculture")]),xmax = (top.model$summary.random$species_idx5$`0.975quant`[which(top.model$summary.random$species_idx5$ID == "225")]+top.model$summary.fixed$mean[which(rownames(top.model$summary.fixed) == "agriculture")]),ymin = 0,ymax = Inf,fill="blue", alpha = .5)+
-  # geom_vline(xintercept = 0,color="black",size = 1.25,lty = "solid")+
-  labs(y= "Frequency", x="Agriculture Effect (slope)")
-
-ggpubr::ggarrange(p.rapae.tmp,p.rapae.pre,p.rapae.urb,p.rapae.ag)
-ggsave("plots/pieris rapae vs other species.jpg",bg="white",width = 7.5,height = 5)
-ggsave("plots/pieris rapae vs other species.pdf",bg="white",width = 7.5,height = 5)
+save(top.model,file = "top model.RData")
 
 # get model predictions ---------------------------------------------------
 #set up climate predictions
-all.pred <- data.frame(tmp = as.data.frame(quantile(unique(d1$tmp_mean),probs = c(0.05,0.5,0.95)))[,1],pre = as.data.frame(quantile(unique(d1$pre),probs = c(0.05,0.5,0.95)))[,1],urban = as.data.frame(quantile(unique(d1$urban),probs = c(0.05,0.5,0.95)))[,1],agriculture = as.data.frame(quantile(unique(d1$agriculture),probs = c(0.05,0.5,0.95)))[,1],tmp_mean = as.data.frame(quantile(unique(d1$tmp_mean),probs = c(0.05,0.5,0.95)))[,1],pre_mean = as.data.frame(quantile(unique(d1$pre_mean),probs = c(0.05,0.5,0.95)))[,1],  urb_mean = as.data.frame(quantile(unique(d1$urb_mean),probs = c(0.05,0.5,0.95)))[,1],ag_mean = as.data.frame(quantile(unique(d1$ag_mean),probs = c(0.05,0.5,0.95)))[,1],brood = c("1","2","3")) %>% 
+all.pred <- data.frame(tmp = as.data.frame(quantile(unique(d1$tmp),probs = c(0.05,0.5,0.95)))[,1],pre = as.data.frame(quantile(unique(d1$pre),probs = c(0.05,0.5,0.95)))[,1],urban = as.data.frame(quantile(unique(d1$urban),probs = c(0.05,0.5,0.95)))[,1],agriculture = as.data.frame(quantile(unique(d1$agriculture),probs = c(0.05,0.5,0.95)))[,1],tmp_mean = as.data.frame(quantile(unique(d1$tmp_mean),probs = c(0.05,0.5,0.95)))[,1],pre_mean = as.data.frame(quantile(unique(d1$pre_mean),probs = c(0.05,0.5,0.95)))[,1],  urb_mean = as.data.frame(quantile(unique(d1$urb_mean),probs = c(0.05,0.5,0.95)))[,1],ag_mean = as.data.frame(quantile(unique(d1$ag_mean),probs = c(0.05,0.5,0.95)))[,1],brood = c("1","2","3")) %>% 
   mutate(tmp_idx = as.integer(as.factor(tmp)),pre_idx = as.integer(as.factor(pre)),urb_idx = as.integer(as.factor(urban)),ag_idx = as.integer(as.factor(agriculture)),tmp_mean_idx = as.integer(as.factor(tmp_mean)),pre_mean_idx = as.integer(as.factor(pre_mean)),urb_mean_idx = as.integer(as.factor(urb_mean)),ag_mean_idx = as.integer(as.factor(ag_mean)),volt_idx = as.integer(as.factor(brood)))
 
 #create all combinations that we need for prediction
 clim_combs <- all.pred %>% 
   mutate(urb_idx = 2,urb_mean_idx = 2,ag_idx = 2,ag_mean_idx = 2) %>% 
-  expand(tmp_idx,pre_idx,tmp_mean_idx,pre_mean_idx,urb_idx,urb_mean_idx,ag_idx,ag_mean_idx,volt_idx)
+  tidyr::expand(tmp_idx,pre_idx,tmp_mean_idx,pre_mean_idx,urb_idx,urb_mean_idx,ag_idx,ag_mean_idx,volt_idx)
 
 # clim_combs2 <- all.pred %>% 
 #   mutate(tmp_idx = 2, tmp_mean_idx = 2,urb_idx = 2,urb_mean_idx = 2,ag_idx = 2,ag_idx = 2) %>% 
@@ -128,11 +65,11 @@ clim_combs <- all.pred %>%
 
 urb_combs <- all.pred %>% 
   mutate(tmp_idx = 2,tmp_mean_idx = 2,pre_idx = 2,pre_mean_idx = 2,ag_idx = 2,ag_mean_idx = 2) %>% 
-  expand(tmp_idx,pre_idx,tmp_mean_idx,pre_mean_idx,urb_idx,urb_mean_idx,ag_idx,ag_mean_idx)
+  tidyr::expand(tmp_idx,pre_idx,tmp_mean_idx,pre_mean_idx,urb_idx,urb_mean_idx,ag_idx,ag_mean_idx)
 
 ag_combs <- all.pred %>% 
   mutate(tmp_idx = 2,tmp_mean_idx = 2,pre_idx = 2,pre_mean_idx = 2,urb_idx = 2,urb_mean_idx = 2) %>% 
-  expand(tmp_idx,pre_idx,tmp_mean_idx,pre_mean_idx,urb_idx,urb_mean_idx,ag_idx,ag_mean_idx)
+  tidyr::expand(tmp_idx,pre_idx,tmp_mean_idx,pre_mean_idx,urb_idx,urb_mean_idx,ag_idx,ag_mean_idx)
 
 cov.combs <- bind_rows(clim_combs,urb_combs,ag_combs)
 
@@ -306,4 +243,21 @@ ggsave("plots/temperature and urbanization.jpg",bg="white",height = 8,width = 6)
 
 cowplot::plot_grid(p.clim2,p.ag,labels = c("A","B"),nrow = 2)
 ggsave("plots/precip and ag effects.jpg",bg="white",height = 8,width = 6)
+
+#effect sizes
+pred2 %>% 
+  filter(tmp_idx %in% c(1,3) & 
+           pre_idx == 2 & 
+           urb_idx == 2 & 
+           ag_idx == 2 & 
+           urb_mean_idx == 2 & 
+           ag_mean_idx == 2 & 
+           pre_mean_idx == 2 & 
+           tmp_mean_idx %in% c(1,3) & 
+           brood %in% c("1","2","3")) %>% 
+  select(abun_fit,brood,tmp_mean_idx,tmp_idx) %>% 
+  mutate(abun_fit = exp(abun_fit)) %>% 
+  pivot_wider(names_from = tmp_idx, values_from = abun_fit) %>% 
+  mutate(change = `3`/`1`) %>% 
+  arrange(tmp_mean_idx)
 

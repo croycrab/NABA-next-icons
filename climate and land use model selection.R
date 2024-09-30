@@ -136,7 +136,7 @@ d1 <- read.csv("data/all species counts_by strata and year_with covariates.csv")
 d1$strat_idx2 = d1$strat_idx3 = d1$strat_idx4 = d1$strat_idx5 = d1$strat_idx1
 d1$sp_idx2 = d1$sp_idx3 = d1$sp_idx4 = d1$sp_idx5 = d1$sp_idx1 
 # d1$family_idx1 = as.integer(factor(d1$Family))
-d1<-d1 %>% left_join(df.strata2[,c("species","strat_name","brood")],by = c("species","strat_name"))
+d1<-d1 %>% left_join(df.strata[,c("species","strat_name","brood")],by = c("species","strat_name"))
 
 waic.tab <- data.frame(model = model_names,model_type,waic = 1:57)
 for(i in 1:57){
